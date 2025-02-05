@@ -1,0 +1,130 @@
+Dunavyn L. DeGuzman-Loya
+1.28.2025
+Machine Learning II: Neural Networks
+
+A. Perceptron
+    1. Receives inputs, multiples them by some weight, and then passes them into an activation function to produce an output
+   
+    2. X-> receive input -> weight -> function -> output
+        a. y = w0 + w1x1 + w2x2 + wkxk
+    3. Basic: input variable produces output
+    
+    4. Atoms form the basics of any material on earth
+
+B. Perception Layers
+    
+    1. Input layer
+       
+        a. ann(artificial neural network) - input information in the form of numbers, categorical variables, images, texts, audio files, etc.
+       
+        b. weights - or coefficients associated with each input to best model the output
+    
+    2. Output layer
+        a. result that we obtain through rigorous computations performed in something called a middle layer that we will see later
+
+What is the relationship between input and output? 
+Start with simple relationships and build onto more complex relationships between x variables and y
+
+C. Linear transformation 
+
+    1. Relationship between x and y can be modeled
+    2. Equation example 
+    3. most relationships in real life are non-linear
+
+D. Multilayer Perceptron(MLP) - multiple hidden layers
+
+    1. Input -> hidden -> output 
+        a. weighted relationship 
+
+    2. Limitation of the perceptron model is its inability to deal with non-linearity
+        a. a multilayerd neural network overcomes this limitation and helps solve nonlinear problems
+    3. hidden layers - mathematical computations of the model
+        a. least mean square for linear models
+        b. gradient descent, most common 
+        c. Newtons rule
+    4. layers are fully connected - every node in a layer(except the input and the output layer) is connected to every node in the previous and following layer
+
+E. How Perceptions Process Input? 
+
+    1. Hidden Layer(z) 
+        a. transform the input variables through nonlinear methods to try to best model the output variable. 
+        b. all non-linearities and interactions of the input variables are added to the model here
+
+    2. Hidden Layer Function 
+        a. input x1 -> hidden layer x1w1.1 -> perceptron(non-hidden function) -> output
+        b. parameters: weights, biases, learning rate, batch size 
+
+    3. z = w0 + w1.1x1 + w1,kxk
+
+    4. generalized form 1/1+e^-z
+
+F. Output model
+
+    1. function for calculating the weighted sum of the inputs and biases. 
+
+G. Advantages and Disadvantages
+
+    1. Unlimited flexibility: no need to specify their inpuut-output relationships, fastest executing types of predictive models, real-time evaluation & automatic updating
+
+    2. Universal Approximator 
+        a. if given enough neurons and time, nn can model any i/o relationship to any degree of precision
+        b. the chief benefit of ANNs, generalize any situation, with enough hidden units and time, can model any IO relationship, no matter how complex
+        c. in practice, an MLP may not achieve this level of flexibility because we must rely on estimates of the weights and biases. hidden units required for approximating a given function can be enormous
+        d. How many layers? how many neurons are needed in each layer for a given modelling task 
+
+
+    3. No function form and speed
+        a. function describing the i/o relationship need not be specified... or even fully understood.
+
+        b. neural networks are fast scoring models and they are well suited to filtering large volumes of data
+
+        c. parametic nonlinear regression models, they behave like nonparametric regression(smoothing splines) - in that we need not specify the functional form of the model. 
+
+        d. allows us to construct models when the i/o relationships are unknown
+
+        e. list the speed as an advantage of NN's might be surpising, particularly in light of the much-publicized slow training times of early NN's 
+. 
+        f. trained NN can efficiently score large volumes of data. Banks use NNs to take advantage of the public market by predicting customer trends and then trading against the customer. 
+
+        g. Lack of interpretability
+
+            i. black-box objection: this famous objection desparages neural networks, claiming we cannot interpret x,y, and the functional relationship
+
+            ii. two ways to respond
+                1. by admitting that neural networks are most relevant to pure prediction taks
+                2. by applying other modelling techniques, such as decision trees, to "open" the black box. teach/
+        
+        h. Black Box objection Details
+            i. cannot interpret the relationship between the input, hidden, and output layers in an NN, so one criticism is that NN's are black boxes where we dont know the inputs or the functions from hidden layers/ combine to predict or classify
+
+            ii. pure prediction is the goal, understanding how the inputs affect prediction is secondary. In some apps the opposite is true: predictive power is a consideration only to the extent that it validates the interpretive power of the model. NN's are for pure prediction tasks
+
+            iii. use a decision tree to interpret the NN's predictions
+
+        i. sometimes NN's do not outperform regression, this has led to disenchantment with more complex NNs. 
+
+H. Impact of noisy data
+    1. Another source of disenchantment with the relative performance of NNs is sometimes found in the signal-to-noise ratio. 
+
+
+I. Back Propagation and Gradient Descent
+    1. Estimated output is far away from the actual output(high error) 
+        a. update the biases and weights based on an error criterion
+        b. this weight and bias updating process is known as "back propagation" 
+    2. Back-propagation(BP) algo wrok by determining the loss(or error) at the output and then propagating it back into the network 
+        a. the weights are updated to minimize the error resulting from each neuron
+        b. subsequently, the first step in minimizing the error is to determine the gradient(derivatives) of each node w.r.t.: the final output
+        c. one iteration of forwarding and backpropagation iteration is known as "epoch"
+        d. methodology
+            1. It is the method of fine-tuning the weights of a neural net based on the error rate obtained in the previous epoch(iteration) 
+                i. inputs, x arrive through the pre-connected path
+                ii. input is modeled using real weights w: The weights are randomly selected
+                iii. Calculate the output for every neuron from input layer, to the hidden layers, to the output layer
+                iv. calculate the error in the outputs
+                    a. error = actual output - desired output
+
+
+
+
+
+

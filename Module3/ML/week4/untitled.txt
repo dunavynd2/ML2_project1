@@ -1,0 +1,14 @@
+Dunavyn L. DeGuzman-Loya
+Variable REDUCTION and PCA
+
+1. Columns = Variables
+    a. collinearirty issues
+        i. 
+    b. model instability
+        i. 
+2. Principle Component Analysis
+    a. Dimension reduction technique that creates variables (that are weighted linear combinations of orignal variables) called Principal Components
+    b. Creates as many components as there are input variables (sum of variance of components = 100%) 
+    c. performs an eigenvalue decomposition of a correlation or covariance matrix
+    d. creates components that consolidate more of the explained variance into the first few Principal Components(PCs) that in any variable in the original data
+    
