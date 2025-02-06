@@ -3,6 +3,14 @@
 ### Set up ----
 
 # load libraries
+install.packages("tidyverse")
+install.packages("GGally")
+install.packages("caret")
+install.packages("neuralnet")
+install.packages("dplyr")
+install.packages("fastDummies")
+install.packages("sigmoid")
+
 library(tidyverse)
 library(GGally) # for data exploration
 library(caret) #For confusionMatrix(), training ML models, and more
@@ -23,16 +31,27 @@ str(airbnb)
 #Create dummy variables for each level of the categorical variables of interest
 #Removing categorical variables and one dummy level of each categorical variables
 final_data <-
-  toyota |>
+  airbnb |>
   dummy_cols(
-    select_columns = c('Fuel_Type','Color'),
+    select_columns = c('room_type','neighborhood','bathrooms','superhost'),
     remove_selected_columns = T,
     remove_first_dummy = T
   )
+final_data$host_since <- as.Date(final_data$host_since, format = "%m/%d/%Y")
+final_data$year <- as.numeric(format(final_data$host_since, '%Y'))
+final_data$month <- as.numeric(format(final_data$host_since, '%m'))
+final_data$day <- as.numeric(format(final_data$host_since, '%d'))
+final_data$day_of_week <- as.numeric(format(final_data$host_since, '%u'))
+final_data$day_of_year <- as.numeric(format(final_data$host_since, '%j'))
+
+final_data <- final_data |> select(-host_since)
+str(final_data)
+
+final_data <- na.omit(final_data)
 
 ### Step 1: Create a train/test split ----
 test_idx <- createDataPartition(
-  final_data$Price,
+  final_data$price,
   p = 0.3,
   list = FALSE
 )
@@ -55,7 +74,6 @@ train_data |>
 test_data |>
   is.na() |>
   colSums()
-
 ### Step 4: Feature Engineering ----
 
 # normalize the data. Do not normalize price.
@@ -63,7 +81,7 @@ normalizer <- preProcess(
   train_data |>
     select(
       where(function(x) ! is.integer(x) & ! is.factor(x)),
-      -Price
+      -price
     ),
   method = "range"
 )
@@ -71,21 +89,29 @@ normalizer <- preProcess(
 train_data <- predict(normalizer, train_data)
 
 test_data <- predict(normalizer, test_data)
-
+str(test_data)
 ### Step 5: Feature & Model Selection ----
 
 # Train a neural net with one hidden layer and 5 units using the neuralnet package
 # Use a ReLu activation function
+relu <- function(x) ifelse(x>0,x,0)
 # if you don't converge change the stepmax parameter to a larger value or change the learning rate
+predictors <- colnames(train_data)[colnames(train_data) != "price"]
+formula <- as.formula(paste("price ~", paste(predictors, collapse = " +")))
+colnames(train_data) <- make.names(colnames(train_data))
+
 nn1 <- 
   neuralnet(
-    Price ~.,
+    price ~.,
     data = train_data,
     linear.output = TRUE, # classification vs regression
     act.fct = relu,
     hidden = 5
   )
 
+print(colnames(train_data))
+str(train_data)
+colSums(train_data)
 plot(nn1)
 
 # Train a second neural net using caret with the 'nnet' method.
