@@ -1,7 +1,3 @@
-### Week 3 Exercises ----
-
-### Set up ----
-
 # load libraries
 install.packages("tidyverse")
 install.packages("GGally")
@@ -97,9 +93,11 @@ str(test_data)
 relu <- function(x) ifelse(x>0,x,0)
 # if you don't converge change the stepmax parameter to a larger value or change the learning rate
 predictors <- colnames(train_data)[colnames(train_data) != "price"]
+# Replace spaces with underscores in your variable names
+predictors <- gsub(" ", "_", predictors)
 formula <- as.formula(paste("price ~", paste(predictors, collapse = " +")))
 colnames(train_data) <- make.names(colnames(train_data))
-
+str(train_data)
 nn1 <- 
   neuralnet(
     price ~.,
