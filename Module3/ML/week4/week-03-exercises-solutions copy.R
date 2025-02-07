@@ -98,14 +98,27 @@ predictors <- gsub(" ", "_", predictors)
 formula <- as.formula(paste("price ~", paste(predictors, collapse = " +")))
 colnames(train_data) <- make.names(colnames(train_data))
 str(train_data)
-nn1 <- 
-  neuralnet(
-    price ~.,
-    data = train_data,
-    linear.output = TRUE, # classification vs regression
-    act.fct = relu,
-    hidden = 5
-  )
+nn1 <- neuralnet(
+  price ~ .,
+  data = train_data,
+  hidden = 1,
+  threshold = 0.01,
+  stepmax = 1e5,
+  rep = 1,
+  startweights = NULL,
+  learningrate.limit = NULL,
+  learningrate.factor = list(minus = 0.5, plus = 1.2),
+  learningrate = NULL,
+  lifesign = "minimal",
+  lifesign.step = 1000,
+  algorithm = "rprop+",
+  err.fct = "sse",
+  act.fct = relu, # Use ReLU activation function
+  linear.output = TRUE,
+  exclude = NULL,
+  constant.weights = NULL,
+  likelihood = FALSE
+)
 
 print(colnames(train_data))
 str(train_data)
