@@ -1,12 +1,8 @@
-# load libraries
-install.packages("tidyverse")
-install.packages("GGally")
-install.packages("caret")
-install.packages("neuralnet")
-install.packages("dplyr")
-install.packages("fastDummies")
-install.packages("sigmoid")
+### Week 3 Exercises ----
 
+### Set up ----
+
+# load libraries
 library(tidyverse)
 library(GGally) # for data exploration
 library(caret) #For confusionMatrix(), training ML models, and more
@@ -29,22 +25,10 @@ str(airbnb)
 final_data <-
   airbnb |>
   dummy_cols(
-    select_columns = c('room_type','neighborhood','bathrooms','superhost'),
+    select_columns = c('neighborhood', 'room_type','bathrooms','superhost'),
     remove_selected_columns = T,
     remove_first_dummy = T
   )
-final_data$host_since <- as.Date(final_data$host_since, format = "%m/%d/%Y")
-final_data$year <- as.numeric(format(final_data$host_since, '%Y'))
-final_data$month <- as.numeric(format(final_data$host_since, '%m'))
-final_data$day <- as.numeric(format(final_data$host_since, '%d'))
-final_data$day_of_week <- as.numeric(format(final_data$host_since, '%u'))
-final_data$day_of_year <- as.numeric(format(final_data$host_since, '%j'))
-
-final_data <- final_data |> select(-host_since)
-str(final_data)
-
-final_data <- na.omit(final_data)
-
 ### Step 1: Create a train/test split ----
 test_idx <- createDataPartition(
   final_data$price,
@@ -70,14 +54,25 @@ train_data |>
 test_data |>
   is.na() |>
   colSums()
+
+str(train_data)
+
+test_data$host_since<- mdy(test_data$host_since)
+test_data$host_since <- as.numeric(test_data$host_since)
+train_data$host_since <- mdy(train_data$host_since)
+train_data$host_since <- as.numeric(train_data$host_since)
+str(test_data)
+str(train_data)
+na.omit(train_data)
+na.omit(test_data)
+
 ### Step 4: Feature Engineering ----
 
 # normalize the data. Do not normalize price.
 normalizer <- preProcess(
   train_data |>
     select(
-      where(function(x) ! is.integer(x) & ! is.factor(x)),
-      -price
+      where(function(x) ! is.integer(x) & ! is.factor(x))
     ),
   method = "range"
 )
@@ -85,44 +80,37 @@ normalizer <- preProcess(
 train_data <- predict(normalizer, train_data)
 
 test_data <- predict(normalizer, test_data)
-str(test_data)
-### Step 5: Feature & Model Selection ----
 
+### Step 5: Feature & Model Selection ----
+colnames(train_data) <- gsub(" ", "_", colnames(train_data))
+colnames(test_data) <- gsub(" ", "_", colnames(test_data))
+
+# Median imputation for multiple columns
+train_data <- train_data %>%
+  mutate(across(where(~ any(is.na(.))), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
+test_data <- test_data %>%
+  mutate(across(where(~ any(is.na(.))), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
+
+
+train_data |>
+  is.na() |>
+  colSums()
+
+test_data |>
+  is.na() |>
+  colSums()
 # Train a neural net with one hidden layer and 5 units using the neuralnet package
 # Use a ReLu activation function
-relu <- function(x) ifelse(x>0,x,0)
 # if you don't converge change the stepmax parameter to a larger value or change the learning rate
-predictors <- colnames(train_data)[colnames(train_data) != "price"]
-# Replace spaces with underscores in your variable names
-predictors <- gsub(" ", "_", predictors)
-formula <- as.formula(paste("price ~", paste(predictors, collapse = " +")))
-colnames(train_data) <- make.names(colnames(train_data))
-str(train_data)
-nn1 <- neuralnet(
-  price ~ .,
-  data = train_data,
-  hidden = 1,
-  threshold = 0.01,
-  stepmax = 1e5,
-  rep = 1,
-  startweights = NULL,
-  learningrate.limit = NULL,
-  learningrate.factor = list(minus = 0.5, plus = 1.2),
-  learningrate = NULL,
-  lifesign = "minimal",
-  lifesign.step = 1000,
-  algorithm = "rprop+",
-  err.fct = "sse",
-  act.fct = relu, # Use ReLU activation function
-  linear.output = TRUE,
-  exclude = NULL,
-  constant.weights = NULL,
-  likelihood = FALSE
-)
+nn1 <- 
+  neuralnet(
+    price ~.,
+    data = train_data,
+    linear.output = TRUE, # classification vs regression
+    act.fct = relu,
+    hidden = 1
+  )
 
-print(colnames(train_data))
-str(train_data)
-colSums(train_data)
 plot(nn1)
 
 # Train a second neural net using caret with the 'nnet' method.
@@ -131,7 +119,7 @@ plot(nn1)
 # What's the best size and decay?
 
 nn2 <- train(
-  Price ~.,
+  price ~.,
   data = train_data,
   method = "nnet",
   linout = TRUE,
@@ -153,11 +141,12 @@ nn2$bestTune
 # skipping for brevity
 
 ### Step 7: Predictions and Conclusions ----
-
-# get predictions from both models
-p1 <- predict(nn1, test_data)
-
-p2 <- predict(nn2, test_data)
+min_price <- normalizer$ranges[1,"price"]
+normalizer$ranges
+max_price <- normalizer$ranges[2, "price"]
+p1_original <- p1[, 1] * (max_price - min_price) + min_price
+p2_original <- p2 * (max_price - min_price) + min_price
+actual_prices <- test_data$price * (max_price - min_price) + min_price
 
 # if you normalized price, convert predictions back to dollars
 
@@ -167,31 +156,36 @@ p2 <- predict(nn2, test_data)
 
 results <- tibble(
   model = c("neuralnet", "caret-nnet"),
-  r2 = c(R2(test_data$Price, p1[,1]), R2(test_data$Price, p2)),
-  rmse = c(RMSE(test_data$Price, p1[,1]), RMSE(test_data$Price, p2)),
-  mae = c(MAE(test_data$Price, p1[,1]), MAE(test_data$Price, p2)),
+  r2 = c(R2(actual_prices, p1_original), R2(actual_prices, p2_original)),
+  rmse = c(RMSE(actual_prices, p1_original), RMSE(actual_prices, p2_original)),
+  mae = c(MAE(actual_prices, p1_original), MAE(actual_prices, p2_original))
 )
 
-results
+print(results)
 
-# plot the original price versus the predicted price for both models
-predictions <- 
-  tibble(
-    neuralnet = p1[,1],
-    caret = p2,
-    actual = test_data$Price
-  ) |>
+predictions <- tibble(
+  neuralnet = p1_original,
+  caret = p2_original,
+  actual = actual_prices
+) |>
   pivot_longer(
     all_of(c("neuralnet", "caret")),
     names_to = "model",
     values_to = "prediction"
   )
 
-predictions |>
+plot <- predictions |>
   ggplot(aes(x = prediction, y = actual, color = model)) + 
   geom_point(alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") + 
   facet_wrap(~model, nrow = 2) +
+  labs(
+    x = "Predicted Price",
+    y = "Actual Price",
+    title = "Predicted vs Actual Prices"
+  ) +
   theme(legend.position = "none")
+print(plot)
 
 # which model do you think works better?
 
